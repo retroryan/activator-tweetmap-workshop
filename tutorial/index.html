@@ -1,23 +1,75 @@
 <html>
 <head>
-    <title>Hello Play Framework - Activator Template</title>
+    <title>Tweetmap Workshop - Activator Template</title>
 </head>
 <body>
 <div>
-    <p>You've just created a simple Play Framework application! Now lets explore the code and make some changes.</p>
+    <p>Welcome to the Tweetmap Workshop! You've just created a simple Play Framework application! We will use this as
+        the starting template for the Tweetmap Workshop.</p>
 
-    <h2> View the App</h2>
+    <h2>View the App</h2>
 
     <p>
-        Once the application has been compiled and the server started, your application can be accessed at: <a href="http://localhost:9000" target="_blank">http://localhost:9000</a><br/>
+        Once the application has been compiled and the server started, your application can be accessed at: <a
+            href="http://localhost:9000" target="_blank">http://localhost:9000</a><br/>
         Check in <a href="#run" class="shortcut">Run</a> to see the server status.<br/>
-        When you make an HTTP request to that URL, the Play server figures out what code to execute which will handle the request and return a response.  In this application the request handler for requests to the root URL (e.g. "/") are handled by a Java Controller.  You can use Java and Scala to create your controllers.<br/>
-        Controllers asynchronously return HTTP responses of any content type (i.e. HTML, JSON, binary).
     </p>
 </div>
 <div>
-    <h2>UNDER CONSTRUCTION</h2>
+    <h2>Reactive Requests</h2>
+
+    <p>
+    <ul>
+        <li>Routes</li>
+        <li>Controllers</li>
+        <li>Views</li>
+        <li>Reactive Requests</li>
+        <li>JSON</li>
+    </ul>
+
+    1. Create a new route in <a href="#code/conf/routes" class="shortcut">routes</a>:</div></br>
+
+    GET / controllers.Tweets.index</br>
+    GET /tweets controllers.Tweets.search(query: String)</br></br>
+
+    2. Create a new Controller `app/controllers/Tweets.scala`:
+
+ <pre><code>
+     package controllers
+
+     import play.api.mvc.{Action, Controller}
+     import scala.concurrent.Future
+     import play.api.libs.json.{JsValue, Json}
+     import play.api.libs.ws.WS
+     import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+     object Tweets extends Controller {
+
+         def index = Action { implicit request =>
+            Ok(views.html.index("TweetMap"))
+         }
+
+         def search(query: String) = Action.async {
+            fetchTweets(query).map(tweets => Ok(tweets))
+         }
+
+         def fetchTweets(query: String): Future[JsValue] = {
+             val tweetsFuture = WS.url("http://twitter-search-proxy.herokuapp.com/search/tweets").withQueryString("q" -> query).get()
+             tweetsFuture.map { response =>
+                response.json
+             } recover {
+                case _ => Json.obj("responses" -> Json.arr())
+             }
+         }
+
+     }
+ </code></pre>
+
+    3. Test it: <a href="http://localhost:9000/tweets?query=typesafe" target="_blank">http://localhost:9000/tweets?query=typesafe</a>
+    </p>
 </div>
+
+
 <!--
 <div>
     <h2> Code Overview</h2>
@@ -90,9 +142,13 @@
     <h2> Further Learning</h2>
 
     <p>
-        The <a href="http://www.playframework.com/documentation" target="_blank">Play Documentation</a> contains much more exhaustive details and also covers a number of other topics which haven't been addressed in this tutorial.<br/>
-        <a href="http://stackoverflow.com" target="_blank">StackOverflow</a> is a great place ask questions about Play.<br/>
-        <a href="http://groups.google.com/group/play-framework" target="_blank">The play-framework</a> Google Group is a great place to discuss Play.<br/>
+        The <a href="http://www.playframework.com/documentation" target="_blank">Play Documentation</a> contains much
+        more exhaustive details and also covers a number of other topics which haven't been addressed in this
+        tutorial.<br/>
+        <a href="http://stackoverflow.com" target="_blank">StackOverflow</a> is a great place ask questions about
+        Play.<br/>
+        <a href="http://groups.google.com/group/play-framework" target="_blank">The play-framework</a> Google Group is a
+        great place to discuss Play.<br/>
     </p>
 </div>
 </body>
