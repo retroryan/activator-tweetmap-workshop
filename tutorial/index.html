@@ -127,9 +127,7 @@
 <div>
     <h2>Create an Akka Actor</h2>
 
-    <p>1. Create a new directory /actors in <a href="#code/app" class="shortcut">/app</a></p>
-
-    <p>2. Create a new UserActor.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> containing:</p>
+    <p>1. Create a new UserActor.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> containing:</p>
 
       <pre><code>
 
@@ -386,7 +384,60 @@
 
 </div>
 
+<div>
+    <h2>Test the Actor</h2>
 
+    <p>1. The akka-testkit dependency has already been added to <a href="#code/build.sbt" class="shortcut">build.sbt.</a> Notice that it specifies the scope as only being test.</p>
+
+    <p>2. Create a new file in test/UserActorSpec.scala containing:</p>
+
+     <pre><code>
+         import actors.UserActor
+         import akka.testkit.TestActorRef
+         import org.specs2.mutable._
+         import org.specs2.runner._
+         import org.specs2.time.NoTimeConversions
+         import org.junit.runner._
+
+         import play.api.libs.concurrent.Akka
+         import play.api.libs.json.{JsValue, Json}
+         import play.api.test._
+
+         import scala.concurrent.duration._
+         import scala.concurrent.{Await, Promise}
+
+         @RunWith(classOf[JUnitRunner])
+         class UserActorSpec extends Specification with NoTimeConversions {
+
+             "UserActor" should {
+
+                 "fetch tweets" in new WithApplication {
+
+                     implicit val actorSystem = Akka.system
+
+                     val promiseJson = Promise[Seq[JsValue]]()
+                     def validateJson(jsValue: JsValue) {
+                        val tweets = (jsValue \ "statuses").as[Seq[JsValue]]
+                        promiseJson.success(tweets)
+                     }
+
+                     val userActorRef = TestActorRef(new UserActor(validateJson, 1.second))
+
+                     val querySearchTerm = "scala"
+                     val jsonQuery = Json.obj("query" -> querySearchTerm)
+
+                     userActorRef ! jsonQuery
+                     userActorRef.underlyingActor.maybeQuery.getOrElse("") must beEqualTo(querySearchTerm)
+
+                     Await.result(promiseJson.future, 10.seconds).length must beGreaterThan(1)
+
+                 }
+             }
+         }
+     </code></pre>
+
+    <p>3. Run the <a href="#test" class="shortcut">tests</a> </p>
+</div>
 <!--
 <div>
     <h2> Code Overview</h2>
