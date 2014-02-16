@@ -28,7 +28,7 @@
         </ul>
     </p>
 
-    <p>1. Update the <a href="#code/conf/routes" class="shortcut">routes file</a> with the following routes:</p>
+    <p>1. Update the <a href="#code/conf/routes" class="shortcut">routes</a> file with the following routes:</p>
 
     <p>GET   &nbsp;&nbsp /        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; controllers.Tweets.index</p>
     <p>GET   &nbsp;&nbsp /tweets  &nbsp;&nbsp;&nbsp;&nbsp; controllers.Tweets.search(query: String)</p>
@@ -80,14 +80,17 @@
     </ul>
 
 
-    <p>1. Update the <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html file</a> replacing the contents of <pre><code> &ltdiv class="container-fluid"&gt </code></pre> with:
+    <p>1. Update the <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html</a> file replacing the contents of <pre><code> &ltdiv class="container-fluid"&gt </code></pre> with:
 
     <pre><code>
-       &lthref&gt
+        &lt;a href="#" class="brand pull-left"&gt;@title&lt;/a&gt;
+        &lt;form id="queryForm" class="navbar-search pull-left"&gt;
+        &lt;input id="twitterQuery" name="twitterQuery" type="text" class="search-query" placeholder="Search"&gt;
+        &lt;/form&gt;
     </code></pre>
 
 
-    <p>2. Replace the contents of the <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html file:</a></p>
+    <p>2. Replace the contents of the <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html</a> file:</p>
 
     <pre><code>
         @(message: String)(implicit request: RequestHeader)
@@ -106,7 +109,17 @@
     <p>4. Create a new index.coffee file in <a href="#code/app/assets/javascripts" class="shortcut">/app/assets/javascripts</a> containing:</p>
 
     <pre><code>
+        $ ->
+            $("#queryForm").submit (event) ->
+                event.preventDefault()
+                query = $("#twitterQuery").val()
+                $.get "/tweets?query=" + query, (data) ->
+                    displayTweets(data)
 
+            displayTweets = (tweets) ->
+                $("#tweets").empty()
+                $.each tweets.statuses, (index, tweet) ->
+                    $("#tweets").append $("<li>").text(tweet.text)
 
     </code></pre>
 
@@ -114,7 +127,7 @@
 </div>
 
 <div>
-    <h2>Actors</h2>
+    <h2>Create an Akka Actor</h2>
 
     <p>1. Create a new directory /actors in <a href="#code/app" class="shortcut">/app</a></p>
 
@@ -166,13 +179,13 @@
 </div>
 
 <div>
-    <h2>Websockets</h2>
+    <h2>Add Websockets</h2>
 
-    <p>1. Add the following route to the  <a href="#code/conf/routes" class="shortcut">routes file:</a></p>
+    <p>1. Add the following route to the  <a href="#code/conf/routes" class="shortcut">routes </a>file:</p>
 
     <p>GET &nbsp;&nbsp /ws     &nbsp;&nbsp;&nbsp;&nbsp;              controllers.Tweets.ws</p>
 
-    <p>2. Add a new controller method in the <a href="#code/app/controllers/Tweets.scala" class="shortcut">Tweets.scala file:</a> app/controllers/Tweets.scala:</p>
+    <p>2. Add a new controller method in the <a href="#code/app/controllers/Tweets.scala" class="shortcut">Tweets.scala </a> file: app/controllers/Tweets.scala:</p>
 
     <pre><code>
         def ws = WebSocket.using[JsValue] { request =>
@@ -197,7 +210,7 @@
         <pre><code> &ltbody data-ws="@routes.Tweets.ws.webSocketURL()"&gt</code></pre>
 
 
-    <p>4. Update the <a href="#code/app/assets/javascripts/index.coffee" class="shortcut">index.coffee file:</a></p>
+    <p>4. Update the <a href="#code/app/assets/javascripts/index.coffee" class="shortcut">index.coffee </a>file:</p>
 
     <pre><code>
         ws = new WebSocket $("body").data("ws")
@@ -219,6 +232,106 @@
 
     tickDuration = 15 seconds
 
+</div>
+<div>
+    <h2>Add the Tweet Map</h2>
+
+    <ul>
+        <li>WebJars</li>
+        <li>Less</li>
+    </ul>
+
+    <p>1. The webjar dependency on leaflets has already been added to <a href="#code/build.sbt" class="shortcut">build.sbt</a></p>
+
+    <p>2. Include the Leaflet CSS and JS in the <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html </a>file:</p>
+
+    <pre><code>
+        &ltlink rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("leaflet.css"))'&gt
+        &ltscript type='text/javascript' src='@routes.WebJarAssets.at(WebJarAssets.locate("leaflet.js"))'&gt&lt/script&gt
+    </code></pre>
+
+    <p>3. Replace the &ltul&gt in app/views/index.scala.html with:</p>
+    <pre><code>&lt;div id="map"&gt;&lt;/div&gt;</code></pre>
+
+    <p>4. Add a stylesheets directory in <a href="#code/app/assets" class="shortcut">assets</a>
+
+    <p>5. Add an <a href="#code/app/assets/stylesheets" class="shortcut">index.less </a> in the stylesheets directory with:</p>
+
+    <pre><code>
+    #map {
+        position: absolute;
+        top: 40px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+    }
+    </code></pre>
+
+    <p>6. Update the <a href="#code/app/assets/javascripts/index.coffee" class="shortcut">index.coffee </a> file with the following (replacing the displayTweets function):</p>
+
+    <pre><code>
+    map = L.map('map').setView([0, 0], 2)
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {}).addTo(map)
+
+    displayTweets = (tweets) ->
+        $.each tweets.statuses, (index, tweet) ->
+            L.marker([tweet.coordinates.coordinates[1], tweet.coordinates.coordinates[0]])
+                .addTo(map)
+                .bindPopup(tweet.text)
+                .openPopup()
+    </code></pre>
+
+    <p>7. Create new functions in the <a href="#code/app/controllers/Tweets.scala" class="shortcut">Tweets.scala</a> file:</p>
+
+    <pre><code>
+        private def putLatLonInTweet(latLon: JsValue) = __.json.update(__.read[JsObject].map(_ + ("coordinates" -> Json.obj("coordinates" -> latLon))))
+
+        private def tweetLatLon(tweets: Seq[JsValue]): Future[Seq[JsValue]] = {
+            val tweetsWithLatLonFutures = tweets.map { tweet =>
+
+                if ((tweet \ "coordinates" \ "coordinates").asOpt[Seq[Double]].isDefined) {
+                    Future.successful(tweet)
+                } else {
+                    val latLonFuture: Future[(Double, Double)] = (tweet \ "user" \ "location").asOpt[String].map(lookupLatLon).getOrElse(Future.successful(randomLatLon))
+                    latLonFuture.map { latLon =>
+                        tweet.transform(putLatLonInTweet(Json.arr(latLon._2, latLon._1))).getOrElse(tweet)
+                    }
+                }
+            }
+
+            Future.sequence(tweetsWithLatLonFutures)
+        }
+
+        private def randomLatLon: (Double, Double) = ((Random.nextDouble * 180) - 90, (Random.nextDouble * 360) - 180)
+
+        private def lookupLatLon(query: String): Future[(Double, Double)] = {
+            val locationFuture = WS.url("http://maps.googleapis.com/maps/api/geocode/json").withQueryString(
+                "sensor" -> "false",
+                "address" -> query
+            ).get()
+
+            locationFuture.map { response =>
+                (response.json \\ "location").headOption.map { location =>
+                    ((location \ "lat").as[Double], (location \ "lng").as[Double])
+                }.getOrElse(randomLatLon)
+            }
+        }
+    </code></pre>
+    <p>8. In <a href="#code/app/controllers/Tweets.scala" class="shortcut">Tweets.scala</a> update the fetchTweets function to use the new tweetLatLon function:</p>
+
+    <pre><code>
+        def fetchTweets(query: String): Future[JsValue] = {
+            val tweetsFuture = WS.url("http://twitter-search-proxy.herokuapp.com/search/tweets").withQueryString("q" -> query).get()
+            tweetsFuture.flatMap { response =>
+                tweetLatLon((response.json \ "statuses").as[Seq[JsValue]])
+            } recover {
+                case _ => Seq.empty[JsValue]
+            } map { tweets =>
+                Json.obj("statuses" -> tweets)
+            }
+        }
+    </code></pre>
+    <p>9. Refresh your browser to see the TweetMap!</p>
 </div>
 <div>
     <h2>Test the Controller</h2>
