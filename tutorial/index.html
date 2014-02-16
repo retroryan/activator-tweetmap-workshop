@@ -19,21 +19,22 @@
     <h2>Reactive Requests</h2>
 
     <p>
-    <ul>
-        <li>Routes</li>
-        <li>Controllers</li>
-        <li>Views</li>
-        <li>Reactive Requests</li>
-        <li>JSON</li>
-    </ul>
+        <ul>
+            <li>Routes</li>
+            <li>Controllers</li>
+            <li>Views</li>
+            <li>Reactive Requests</li>
+            <li>JSON</li>
+        </ul>
+    </p>
 
-    <p>1. Create a new route in <a href="#code/conf/routes" class="shortcut">routes</a>:</p>
+    <p>1. Update the <a href="#code/conf/routes" class="shortcut">routes file</a> with the following routes:</p>
 
-    <p>GET /    controllers.Tweets.index</p>
-    <p>GET /tweets  controllers.Tweets.search(query: String)</p>
+    <p>GET   &nbsp;&nbsp /        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; controllers.Tweets.index</p>
+    <p>GET   &nbsp;&nbsp /tweets  &nbsp;&nbsp;&nbsp;&nbsp; controllers.Tweets.search(query: String)</p>
 
 <p></p>
-<p>2. Create a new Controller `app/controllers/Tweets.scala`:</p>
+<p>2. Create a new Controller by creating a new Tweets.scala file in <a href="#code/app/controllers" class="shortcut">app/controllers</a>:</p>
 <p></p>
  <pre><code>
      package controllers
@@ -68,6 +69,210 @@
 
     <p>3. Test it: <a href="http://localhost:9000/tweets?query=typesafe" target="_blank">http://localhost:9000/tweets?query=typesafe</a></p>
     <p></p>
+</div>
+
+<div>
+    <h2>CoffeeScript Asset Compiler</h2>
+    <ul>
+        <li>Asset Compiler</li>
+        <li>Bootstrap</li>
+        <li>CoffeeScript</li>
+    </ul>
+
+
+    <p>1. Update the <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html file</a> replacing the contents of <pre><code> &ltdiv class="container-fluid"&gt </code></pre> with:
+
+    <pre><code>
+       &lthref&gt
+    </code></pre>
+
+
+    <p>2. Replace the contents of the <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html file:</a></p>
+
+    <pre><code>
+        @(message: String)(implicit request: RequestHeader)
+
+        @main(message) {
+
+        &ltscript type='text/javascript' src='@routes.Assets.at("javascripts/index.min.js")'&gt&lt/script&gt
+
+        &ltul id="tweets"&gt&lt/ul&gt
+
+        }
+    </code></pre>
+
+    <p>3. Create the new directories /assets/javascripts in <a href="#code/app" class="shortcut">/app</a></p>
+
+    <p>4. Create a new index.coffee file in <a href="#code/app/assets/javascripts" class="shortcut">/app/assets/javascripts</a> containing:</p>
+
+    <pre><code>
+
+
+    </code></pre>
+
+    <p>5. Run the app, make a query, and verify the tweets show up: <a href="http://localhost:9000/tweets?query=typesafe" target="_blank">http://localhost:9000</a></p>
+</div>
+
+<div>
+    <h2>Actors</h2>
+
+    <p>1. Create a new directory /actors in <a href="#code/app" class="shortcut">/app</a></p>
+
+    <p>2. Create a new UserActor.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> containing:</p>
+
+      <pre><code>
+
+          package actors
+
+          import akka.actor.{Props, Actor}
+          import play.api.libs.json.JsValue
+          import scala.concurrent.duration._
+          import play.api.libs.concurrent.Execution.Implicits.defaultContext
+          import controllers.Tweets
+
+          class UserActor(tweetUpdate: JsValue => Unit, tickDuration:FiniteDuration) extends Actor {
+
+              var maybeQuery: Option[String] = None
+
+              val tick = context.system.scheduler.schedule(Duration.Zero, tickDuration, self, FetchTweets)
+
+              def receive = {
+
+              case FetchTweets =>
+                  maybeQuery.map { query =>
+                      Tweets.fetchTweets(query).map(tweetUpdate)
+              }
+
+              case message: JsValue =>
+                  maybeQuery = (message \ "query").asOpt[String]
+              }
+
+              override def postStop() {
+                  tick.cancel()
+              }
+
+          }
+
+          case object FetchTweets
+
+          object UserActor {
+
+              def props(tweetUpdate: JsValue => Unit, tickDuration:FiniteDuration): Props =
+                  Props(new UserActor(tweetUpdate, tickDuration))
+
+          }
+      </code></pre>
+
+</div>
+
+<div>
+    <h2>Websockets</h2>
+
+    <p>1. Add the following route to the  <a href="#code/conf/routes" class="shortcut">routes file:</a></p>
+
+    <p>GET &nbsp;&nbsp /ws     &nbsp;&nbsp;&nbsp;&nbsp;              controllers.Tweets.ws</p>
+
+    <p>2. Add a new controller method in the <a href="#code/app/controllers/Tweets.scala" class="shortcut">Tweets.scala file:</a> app/controllers/Tweets.scala:</p>
+
+    <pre><code>
+        def ws = WebSocket.using[JsValue] { request =>
+            val (out, channel) = Concurrent.broadcast[JsValue]
+
+            val tickDuration = Duration(current.configuration.getMilliseconds("tickDuration").get, TimeUnit.MILLISECONDS)
+
+            val userActor = Akka.system.actorOf(UserActor.props(channel.push, tickDuration))
+
+            val in = Iteratee.foreach[JsValue](userActor ! _).map(_ => Akka.system.stop(userActor))
+
+            (in, out)
+        }
+    </code></pre>
+
+    <p>3. Replace the first line in <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html</a> with:</p>
+
+       <pre><code> @(title: String)(content: Html)(implicit request: RequestHeader)</code></pre>
+
+        <p>And replace the body tag with:</p>
+
+        <pre><code> &ltbody data-ws="@routes.Tweets.ws.webSocketURL()"&gt</code></pre>
+
+
+    <p>4. Update the <a href="#code/app/assets/javascripts/index.coffee" class="shortcut">index.coffee file:</a></p>
+
+    <pre><code>
+        ws = new WebSocket $("body").data("ws")
+            ws.onmessage = (event) ->
+                data = JSON.parse event.data
+                displayTweets(data)
+
+        $("#queryForm").submit (event) ->
+            event.preventDefault()
+            query = $("#twitterQuery").val()
+            ws.send JSON.stringify
+                query: query
+            $.get "/tweets?query=" + query, (data) ->
+                displayTweets(data)
+
+    </code></pre>
+
+    <p>5. Add a config parameter to <a href="#code/conf/application.conf" class="shortcut">conf/application.conf</a></p>
+
+    tickDuration = 15 seconds
+
+</div>
+<div>
+    <h2>Test the Controller</h2>
+
+    <p>
+    <ul>
+        <li>Specs2</li>
+        <li>Running the Tests</li>
+        <li>Views</li>
+        <li>Reactive Requests</li>
+        <li>JSON</li>
+    </ul>
+
+    <p>Create a new test by adding the TweetsSpec.scala file in the <a href="#code/test" class="shortcut">test directory:</a></p>
+    <pre><code>
+        import org.specs2.mutable._
+        import org.specs2.runner._
+        import org.junit.runner._
+
+        import play.api.libs.json.JsValue
+        import play.api.test._
+        import play.api.test.Helpers._
+
+        @RunWith(classOf[JUnitRunner])
+        class TweetsSpec extends Specification {
+
+            "Application" should {
+                "render index template" in new WithApplication {
+                    val html = views.html.index("Coco")
+                    contentAsString(html) must contain("Coco")
+                }
+
+                "render the index page" in new WithApplication{
+                    val home = route(FakeRequest(GET, "/")).get
+
+                    status(home) must equalTo(OK)
+                    contentType(home) must beSome.which(_ == "text/html")
+                    contentAsString(home) must contain ("TweetMap")
+                }
+
+                "search for tweets" in new WithApplication {
+                    val search = controllers.Tweets.search("typesafe")(FakeRequest())
+
+                    status(search) must equalTo(OK)
+                    contentType(search) must beSome("application/json")
+                    (contentAsJson(search) \ "statuses").as[Seq[JsValue]].length must beGreaterThan(0)
+                }
+            }
+        }
+
+    </code></pre>
+
+    <p>2. Run the <a href="#test" class="shortcut">tests</a>
+
 </div>
 
 
