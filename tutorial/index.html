@@ -10,7 +10,7 @@
     <p>Within the Activator UI you can:
     <ul>
 
-    <li>Browse & edit the code (select Code)</li>
+    <li>Browse & edit the code (select Code.  To save a file the keyboard shortcut command-s works.)</li>
     <li>Add & delete files from the code (select Code and then the plus sign.  To delete open the file and click on delete)</li>
     <li>Open the code in IntelliJ IDEA or Eclipse (select Code then the Open dropdown)</li>
     <li>See the compile output (select Compile)</li>
@@ -90,12 +90,29 @@ object Tweets extends Controller {
     <h2>CoffeeScript Asset Compiler</h2>
     <ul>
         <li>Asset Compiler</li>
-        <li>Bootstrap</li>
         <li>CoffeeScript</li>
     </ul>
 
+<p>1. Create a new index.coffee file in <a href="#code/app/assets/javascripts" class="shortcut">/app/assets/javascripts</a> containing:</p>
 
-    <p>1. Update the <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html</a> file replacing the contents of <pre><code> &ltdiv class="container-fluid"&gt </code></pre> with:
+<p><strong>Note that coffee script is indented with 2 spaces! Verify the indentation if the compilation is not working</strong></p>
+
+<pre><code>
+$ ->
+  $("#queryForm").submit (event) ->
+    event.preventDefault()
+    query = $("#twitterQuery").val()
+    $.get "/tweets?query=" + query, (data) ->
+      displayTweets(data)
+
+    displayTweets = (tweets) ->
+      $("#tweets").empty()
+      $.each tweets.statuses, (index, tweet) ->
+        $("#tweets").append $("&ltli&gt").text(tweet.text)
+</code></pre>
+
+
+<p>2. Update the <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html</a> file replacing the contents of <pre><code> &ltdiv class="container-fluid"&gt </code></pre> with:
 
 <pre><code>
 &lt;a href="#" class="brand pull-left"&gt;@title&lt;/a&gt;
@@ -105,7 +122,7 @@ object Tweets extends Controller {
 </code></pre>
 
 
-    <p>2. Replace the contents of the <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html</a> file:</p>
+<p>3. Replace the contents of the <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html</a> file:</p>
 
 <pre><code>
 @(message: String)(implicit request: RequestHeader)
@@ -119,25 +136,7 @@ object Tweets extends Controller {
 }
 </code></pre>
 
-    <p>3. Create a new index.coffee file in <a href="#code/app/assets/javascripts" class="shortcut">/app/assets/javascripts</a> containing:</p>
-
-    <p><strong>Note that coffee script is indented with 2 spaces! Verify the indentation if the compilation is not working</strong></p>
-
-<pre><code>
-$ ->
-  $("#queryForm").submit (event) ->
-    event.preventDefault()
-    query = $("#twitterQuery").val()
-    $.get "/tweets?query=" + query, (data) ->
-      displayTweets(data)
-
-  displayTweets = (tweets) ->
-    $("#tweets").empty()
-    $.each tweets.statuses, (index, tweet) ->
-      $("#tweets").append $("&ltli&gt").text(tweet.text)
-</code></pre>
-
-    <p>4. Run the app, make a query, and verify the tweets show up: <a href="http://localhost:9000/tweets?query=typesafe" target="_blank">http://localhost:9000</a></p>
+    <p>4. Run the app, make a query, and verify the tweets show up: <a href="http://localhost:9000/" target="_blank">http://localhost:9000</a></p>
 </div>
 
 <div>
@@ -239,9 +238,9 @@ def ws = WebSocket.using[JsValue] { request =>
 
 <pre><code>
   ws = new WebSocket $("body").data("ws")
-    ws.onmessage = (event) ->
-      data = JSON.parse event.data
-      displayTweets(data)
+  ws.onmessage = (event) ->
+    data = JSON.parse event.data
+    displayTweets(data)
 
   $("#queryForm").submit (event) ->
     event.preventDefault()
