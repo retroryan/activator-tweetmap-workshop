@@ -35,7 +35,6 @@
             <li>Routes</li>
             <li>Controllers</li>
             <li>Views</li>
-            <li>Reactive Requests</li>
             <li>JSON</li>
         </ul>
     </p>
@@ -89,6 +88,7 @@ object Tweets extends Controller {
 <div>
     <h2>CoffeeScript Asset Compiler</h2>
     <ul>
+        <li>Reactive Requests</li>
         <li>Asset Compiler</li>
         <li>CoffeeScript</li>
     </ul>
@@ -196,7 +196,7 @@ object UserActor {
 
     <p>GET &nbsp;&nbsp /ws     &nbsp;&nbsp;&nbsp;&nbsp;              controllers.Tweets.ws</p>
 
-    <p>2. Add a new controller method in the <a href="#code/app/controllers/Tweets.scala" class="shortcut">Tweets.scala </a> file: app/controllers/Tweets.scala:</p>
+    <p>2. Add a new controller method in the <a href="#code/app/controllers/Tweets.scala" class="shortcut">Tweets.scala </a> file:</p>
 
 <pre><code>
 
@@ -217,9 +217,9 @@ def ws = WebSocket.using[JsValue] { request =>
 
     val tickDuration = Duration(current.configuration.getMilliseconds("tickDuration").get, TimeUnit.MILLISECONDS)
 
-    val userActor = Akka.system.actorOf(UserActor.props(channel.push, tickDuration))
+    val userActor = Akka.system.actorOf(UserActor.props(jsValue => channel.push(jsValue), tickDuration))
 
-    val in = Iteratee.foreach[JsValue](userActor ! _).map(_ => Akka.system.stop(userActor))
+    val in = Iteratee.foreach[JsValue](jsValue => userActor ! jsValue).map(_ => Akka.system.stop(userActor))
 
     (in, out)
 }
