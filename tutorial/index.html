@@ -44,46 +44,43 @@
 <p></p>
  <pre><code>
 
-import play.api.mvc.{WebSocket, Action, Controller}
+import play.api.mvc.{Action, Controller}
 import scala.concurrent.Future
-import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.libs.json.__
-import play.api.libs.ws.WS
+import play.api.libs.json.{JsValue, Json}
+import play.api.libs.ws._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.iteratee.{Iteratee, Concurrent}
-import play.api.libs.concurrent.Akka
 import play.api.Play.current
-import scala.util.Random
-import akka.actor.Props
 
- /**
- * A reactive request is made in Play by returning a Future[Result].  This makes the request asynchronous
- * since the server doesn't block waiting for the response.  This frees the server thread to handle other requests.
- * The callback to the Future is added as a map, which maps the results to a new value when the Future completes.
- * The results of the Future in this example are mapped to a result (HTTP 200 OK) that gets returned to the client.
- **/
- def search(query: String) = Action.async {
+/**
+* A reactive request is made in Play by returning a Future[Result].  This makes the request asynchronous
+* since the server doesn't block waiting for the response.  This frees the server thread to handle other requests.
+* The callback to the Future is added as a map, which maps the results to a new value when the Future completes.
+* The results of the Future in this example are mapped to a result (HTTP 200 OK) that gets returned to the client.
+**/
+def search(query: String) = Action.async {
     fetchTweets(query).map(tweets => Ok(tweets))
- }
+}
 
- /**
- * Fetch the latest tweets and return the Future[JsValue] of the results.
- * This fetches the tweets asynchronously and fulfills the Future when the results are returned by calling the function.
- * The results are first filtered and only returned if the result status was OK.
- * Then the results are mapped (or transformed) to JSON.
- **/
- def fetchTweets(query: String): Future[JsValue] = {
+/**
+* Fetch the latest tweets and return the Future[JsValue] of the results.
+* This fetches the tweets asynchronously and fulfills the Future when the results are returned by calling the function.
+* The results are first filtered and only returned if the result status was OK.
+* Then the results are mapped (or transformed) to JSON.
+**/
+def fetchTweets(query: String): Future[JsValue] = {
     val tweetsFuture = WS.url("http://twitter-search-proxy.herokuapp.com/search/tweets").withQueryString("q" -> query).get()
-    tweetsFuture.map { response =>
-        response.json
-    } recover {
-        case _ => Json.obj("responses" -> Json.arr())
-    }
- }
+    tweetsFuture
+        .filter(response => response.status == play.api.http.Status.OK)
+        .map { response =>
+                response.json
+            } recover {
+                case _ => Json.obj("statuses" -> Json.arr(Json.obj("text" -> "Error retrieving tweets")))
+            }
+}
 
 </code></pre>
 
-    <p>3. Test it: <a href="http://localhost:9000/tweets?query=typesafe" target="_blank">http://localhost:9000/tweets?query=typesafe</a></p>
+    <p>3. Test it: <a href="http://localhost:9000/search?query=typesafe" target="_blank">http://localhost:9000/search?query=typesafe</a></p>
     <p></p>
 </div>
 
@@ -168,40 +165,70 @@ app.controller('Tweets', function($scope, $http, $timeout, Twitter) {
 </div>
 
 <div>
-    <h2>Add Websockets</h2>
+    <h2>WebSockets with Akka Actor</h2>
 
-    <p>Websockets provide a  bi-directional, full-duplex communications channels over a single TCP connection.  They are created in Play using a normal route.  The difference is the controller returns a WebSocket instead of a Result.</p>
-    <p>1. Add a route for the websocket connection to the <a href="#code/conf/routes" class="shortcut">routes </a>file:</p>
+    <p>WebSockets provide a  bi-directional, full-duplex communications channels over a single TCP connection.  They are created in Play using a normal route.  The difference is the controller returns a WebSocket instead of a Result.</p>
+
+    <p>Play provides different mechanisms for handling WebSockets. In this tutorial we are going to use an actor to handle the WebSockets. First create the Actor to handle the WebSockets.</p>
+
+    <p>1. Create a new UserActor.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> containing:</p>
+
+<pre><code>
+
+package actors
+
+import akka.actor.Actor
+import play.api.libs.json.JsValue
+import scala.concurrent.duration._
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import controllers.Tweets
+
+class UserActor(tweetUpdate: JsValue => Unit) extends Actor {
+
+    var maybeQuery: Option[String] = None
+
+    val tick = context.system.scheduler.schedule(Duration.Zero, 5.seconds, self, UserActor.FetchTweets)
+
+    def receive = {
+        case UserActor.FetchTweets =>
+            maybeQuery.map { query =>
+                Tweets.fetchTweets(query).map(tweetUpdate)
+            }
+
+        case message: JsValue =>
+            maybeQuery = (message \ "query").asOpt[String]
+    }
+
+    override def postStop() {
+        tick.cancel()
+    }
+
+}
+object UserActor {
+    case object FetchTweets
+}
+
+</code></pre>
+
+</div>
+
+<div>
+    <h2>Wire up the WebSockets</h2>
+
+    <p>1. Add a route for the WebSockets connection to the <a href="#code/conf/routes" class="shortcut">routes </a>file:</p>
 
     <p>GET &nbsp;&nbsp /ws     &nbsp;&nbsp;&nbsp;&nbsp;              controllers.Tweets.ws</p>
 
     <p>2. Add a new controller method to create the Websocket in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala:</a></p>
 
 <pre><code>
-//add this to the import section of the file
-import play.mvc.WebSocket;
+    import play.api.mvc.WebSocket
+    import actors.UserActor
 
-//add to body of controller
-/**
-* Create a WebSocket controller that converts the data sent in to JSON.
-* This sets up the WebSocket by adding Java Lambdas to the input channel and the on close event.
-* The Java Lambda in onMessage will get called whenever a new message comes in through the channel.
-* In this example the message is parsed as a json query and then the tweets are fetched based on that query.
-* Fetching tweets returns a promise and the callback to that promise (onRedeem) is a Java Lambda that writes
-* the results out to the client.
-*/
-public static WebSocket&lt;JsonNode&gt; ws() {
-    return WebSocket.whenReady((in, out) -> {
+    def ws = WebSocket.acceptWithActor[JsValue, JsValue] { request => out =>
+        UserActor.props(out)
+    }
 
-        in.onMessage(jsonNode -> {
-            String query = jsonNode.findPath("query").textValue();
-            fetchTweets(query).onRedeem(json -> out.write(json));
-        });
-
-        in.onClose(() -> {
-        });
-     });
-}
 </code></pre>
 
     <p>4. Update the body of the app.factory section of <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> replacing the var twitterService = ... with :
@@ -224,78 +251,11 @@ public static WebSocket&lt;JsonNode&gt; ws() {
 
     return twitterService;
 </code></pre>
+
+
     <p>To verify tweets are showing up it is useful to use a browser inspector and then look under network for the path ws.  Under there look at the frame and verify the requests are being sent.  In chrome the network inspector has a bug and the websocket calls are not refreshed unless you tab out and back in. </p>
 
     <p>5. Run the app and verify the tweets show up: <a href="http://localhost:9000/" target="_blank">http://localhost:9000</a></p>
-
-
-</div>
-
-<div>
-    <h2>Create an Akka Actor</h2>
-
-    <p>1. Create a new UserActor.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> containing:</p>
-
-<pre><code>
-
-package actors
-
-import akka.actor.Actor
-import play.api.libs.json.JsValue
-import scala.concurrent.duration._
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import controllers.Application
-
-class UserActor(tweetUpdate: JsValue => Unit) extends Actor {
-
-    var maybeQuery: Option[String] = None
-
-    val tick = context.system.scheduler.schedule(Duration.Zero, 5.seconds, self, FetchTweets)
-
-    def receive = {
-        case FetchTweets =>
-            maybeQuery.map { query =>
-                Application.fetchTweets(query).map(tweetUpdate)
-            }
-
-        case message: JsValue =>
-            maybeQuery = (message \ "query").asOpt[String]
-    }
-
-    override def postStop() {
-        tick.cancel()
-    }
-
-}
-
-case object FetchTweets
-
-</code></pre>
-
-</div>
-
-<div>
-    <h2>Update the WebSocket</h2>
-
-    <p>1. Update the WebSocket code to return an Actor in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a></p>
-
-<pre><code>
-
-    //add to import section
-    import actors.UserActor;
-
-
-    //add to body of controller
-    public static WebSocket&lt;JsonNode&gt; ws() {
-        //create the UserActor using the static props method.  This will create the Actor with the out actor wired to the
-        //WebSocket out channel.
-        return WebSocket.withActor(UserActor::props);
-    }
-
-
-</code></pre>
-
-<p>5. Verify that the websocket is still connecting and tweets are refreshing <a href="http://localhost:9000/" target="_blank">http://localhost:9000</a>.  You might not be able to see the browser up because the tweets don't change.  So you will need to look at the inspector. </p>
 
 
 </div>
