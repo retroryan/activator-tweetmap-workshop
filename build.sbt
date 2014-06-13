@@ -1,14 +1,22 @@
-import play.Project._
 
-name := "tweetmap-workshop"
+name := """tweetmap-workshop"""
 
-version := "1.0-SNAPSHOT"
+version := "0.42"
+
+lazy val root = (project in file(".")).enablePlugins(PlayScala)
+
+scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-testkit" % "2.2.0" % "test",
-  "org.webjars" %% "webjars-play" % "2.2.0",
-  "org.webjars" % "bootstrap" % "2.3.1",
-  "org.webjars" % "leaflet" % "0.6.4"
+  "org.webjars" % "bootstrap" % "3.1.1",
+  "org.webjars" % "jquery" % "2.1.0-2",
+  "org.webjars" % "angularjs" % "1.2.16",
+  "org.webjars" % "angular-leaflet-directive" % "0.7.6",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.3",
+  "com.typesafe.akka" %% "akka-contrib" % "2.3.3",
+  "com.typesafe.akka" %% "akka-testkit" % "2.3.3" % "test"
 )
 
-playScalaSettings
+// Apply digest calculation and gzip compression to assets
+pipelineStages := Seq(digest, gzip)
+
