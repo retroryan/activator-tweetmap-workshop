@@ -4,7 +4,7 @@
 </head>
 <body>
 <div>
-    <p>Welcome to the Tweetmap Java 8 Going Reactive Tutorial! This starts with a basic Play Framework application and uses it to build a reactive tweet map.</p>
+    <p>Welcome to the Tweetmap Java 8 Going Reactive Tutorial! This tutorial starts with a basic Play Framework application and uses it to build a reactive tweet map.</p>
 
     <p>Within the Activator UI you can:
 
@@ -23,6 +23,8 @@
 
     <h2>View the App</h2>
 
+    <p>Click on the Run Tab and click on start to start the application running.</p>
+
     <p>
         Once the application has been compiled and the server started, your application can be accessed at: <a
             href="http://localhost:9000" target="_blank">http://localhost:9000</a><br/>
@@ -38,7 +40,7 @@
 
     <p>1. Create a new route that will search twitter by updating<a href="#code/conf/routes" class="shortcut">conf/routes</a> with the following route:</p>
 
-    <p>GET  &nbsp;&nbsp; /tweets  &nbsp;&nbsp;&nbsp;&nbsp; controllers.Tweets.search(query: String)</p>
+    <p>GET  &nbsp;&nbsp; /search  &nbsp;&nbsp;&nbsp;&nbsp; controllers.Tweets.search(query: String)</p>
 
 <p>2. Update <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> to add a reactive request handler (or controller) for /tweets:</p>
 <p></p>
@@ -114,7 +116,7 @@ app.factory('Twitter', function($http, $timeout) {
     var twitterService = {
         tweets: [],
         query: function (query) {
-            $http({method: 'GET', url: '/tweets', params: {query: query}}).
+            $http({method: 'GET', url: '/search', params: {query: query}}).
                 success(function (data) {
                     twitterService.tweets = data.statuses;
                 });
