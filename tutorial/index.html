@@ -46,7 +46,6 @@
 <p></p>
  <pre><code>
 
-import play.api.mvc.{Action, Controller}
 import scala.concurrent.Future
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws._
@@ -326,10 +325,9 @@ private def lookupLatLon(query: String): Future[(Double, Double)] = {
 </code></pre>
 
     <p>1. In <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> update the fetchTweets function to use the new tweetLatLon function:</p>
-<pre><code>
 
+    <pre><code>
 
-</code></pre>
 
 def fetchTweets(query: String): Future[JsValue] = {
     val tweetsFuture = WS.url("http://twitter-search-proxy.herokuapp.com/search/tweets").withQueryString("q" -> query).get()
@@ -343,6 +341,7 @@ def fetchTweets(query: String): Future[JsValue] = {
 }
 
     </code></pre>
+
 </div>
 
 <div>
