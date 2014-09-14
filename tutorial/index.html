@@ -38,11 +38,11 @@
     <p>Play Scala uses Futures to execute asynchronous tasks in the background.  The Future is the handle to a future result.  A callback function is added to the Future that gets called when the future completes.</p>
     <p>The primary way of adding a callback to a Future is to add a map method that essentially means map the result of the Future to a new value - which in this case is a Response.</p>
 
-    <p>1. Create a new route that will search twitter by updating<a href="#code/conf/routes" class="shortcut">conf/routes</a> with the following route:</p>
+    <p><b>1. </b> Create a new route that will search twitter by updating<a href="#code/conf/routes" class="shortcut">conf/routes</a> with the following route:</p>
 
     <p>GET  &nbsp;&nbsp; /search  &nbsp;&nbsp;&nbsp;&nbsp; controllers.Tweets.search(query: String)</p>
 
-<p>2. Update <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> to add a reactive request handler (or controller) for /tweets:</p>
+<p><b>2. </b> Update <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> to add a reactive request handler (or controller) for /tweets:</p>
 <p></p>
  <pre><code>
 
@@ -81,7 +81,7 @@ def fetchTweets(query: String): Future[JsValue] = {
 
 </code></pre>
 
-    <p>3. Test it: <a href="http://localhost:9000/search?query=typesafe" target="_blank">http://localhost:9000/search?query=typesafe</a></p>
+    <p><b>3. </b> Test it: <a href="http://localhost:9000/search?query=typesafe" target="_blank">http://localhost:9000/search?query=typesafe</a></p>
     <p></p>
 </div>
 
@@ -89,7 +89,7 @@ def fetchTweets(query: String): Future[JsValue] = {
 <div>
     <h2>AngularJS UI</h2>
 
-<p>1. The <a href="#code/build.sbt" class="shortcut">build.sbt</a> file already has dependencies on AngularJS and Bootstrap:</p>
+<p><b>1. </b> The <a href="#code/build.sbt" class="shortcut">build.sbt</a> file already has dependencies on AngularJS and Bootstrap:</p>
 
     <code>
         <pre>
@@ -98,7 +98,7 @@ def fetchTweets(query: String): Future[JsValue] = {
         </pre>
     </code>
 
-<p>2.  AngularJS has already been enabled in the <a href="#code/app/views/main.scala.html" class="shortcut">main twirl template</a></p>
+<p><b>2. </b>  AngularJS has already been enabled in the <a href="#code/app/views/main.scala.html" class="shortcut">main twirl template</a></p>
 
 <pre><code>
 &lt;html ng-app="tweetMapApp"&gt;
@@ -106,7 +106,7 @@ def fetchTweets(query: String): Future[JsValue] = {
 </code></pre>
 
 
-<p>3. Add the following to  <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> to fetch the tweets:</p>
+<p><b>3. </b> Add the following to  <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> to fetch the tweets:</p>
 
 <pre><code>
 
@@ -149,7 +149,7 @@ app.controller('Tweets', function($scope, $http, $timeout, Twitter) {
 });
 </code></pre>
 
-    <p>4. Replace the contents of <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html</a> file with:
+    <p><b>4. </b> Replace the contents of <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html</a> file with:
 
 <pre><code>
 @(message: String)
@@ -163,7 +163,7 @@ app.controller('Tweets', function($scope, $http, $timeout, Twitter) {
     &lt;/div&gt;
 }
 </code></pre>
-    <p>5. Run the app, make a query, and verify the tweets show up: <a href="http://localhost:9000/" target="_blank">http://localhost:9000</a></p>
+    <p><b>5. </b> Run the app, make a query, and verify the tweets show up: <a href="http://localhost:9000/" target="_blank">http://localhost:9000</a></p>
 </div>
 
 <div>
@@ -173,7 +173,7 @@ app.controller('Tweets', function($scope, $http, $timeout, Twitter) {
 
     <p>Play provides different mechanisms for handling WebSockets. In this tutorial we are going to use an actor to handle the WebSockets. First create the Actor to handle the WebSockets.  First create the actor that will handle the WebSocket communication.</p>
 
-    <p>1. Create a new UserActor.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> containing:</p>
+    <p><b>1. </b> Create a new UserActor.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> containing:</p>
 
 <pre><code>
 
@@ -231,11 +231,11 @@ object UserActor {
 
     <p>WebSockets are created in Play using a normal route.  The difference is the controller returns a WebSocket instead of a Result.</p>
 
-    <p>1. Add a route for the WebSockets connection to the <a href="#code/conf/routes" class="shortcut">routes </a>file:</p>
+    <p><b>1.</b> Add a route for the WebSockets connection to the <a href="#code/conf/routes" class="shortcut">routes </a>file:</p>
 
     <p>GET &nbsp;&nbsp /ws     &nbsp;&nbsp;&nbsp;&nbsp;              controllers.Tweets.ws</p>
 
-    <p>2. Add a new controller method to create the Websocket in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala:</a></p>
+    <p><b>2.</b> Add a new controller method to create the Websocket in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala:</a></p>
 
 <pre><code>
     import play.api.mvc.WebSocket
@@ -247,7 +247,7 @@ object UserActor {
 
 </code></pre>
 
-    <p>3. Update the body of the app.factory section of <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> replacing the var twitterService = ... with :
+    <p><b>3.</b> Update the body of the app.factory section of <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> replacing the var twitterService = ... with :
 
 <pre><code>
     var ws = new WebSocket("ws://localhost:9000/ws");
@@ -271,7 +271,7 @@ object UserActor {
 
     <p>To verify tweets are showing up it is useful to use a browser inspector and then look under network for the path ws.  Under there look at the frame and verify the requests are being sent.  In chrome the network inspector has a bug and the websocket calls are not refreshed unless you tab out and back in. </p>
 
-    <p>5. Run the app and verify the tweets show up: <a href="http://localhost:9000/" target="_blank">http://localhost:9000</a></p>
+    <p><b>4.</b> Run the app and verify the tweets show up: <a href="http://localhost:9000/" target="_blank">http://localhost:9000</a></p>
 
 
 </div>
@@ -279,7 +279,7 @@ object UserActor {
 <div>
     <h2>Update the Twitter Search to add Geo-Coding</h2>
 
-    <p>1. Create new functions in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> to to get (or fake) the location of the tweets:</p>
+    <p><b>1.</b> Create new functions in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> to to get (or fake) the location of the tweets:</p>
 
 
 <pre><code>
@@ -324,7 +324,7 @@ private def lookupLatLon(query: String): Future[(Double, Double)] = {
 }
 </code></pre>
 
-    <p>1. In <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> update the fetchTweets function to use the new tweetLatLon function:</p>
+    <p><b>2.</b> In <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> update the fetchTweets function to use the new tweetLatLon function:</p>
 
     <pre><code>
 
@@ -347,9 +347,9 @@ def fetchTweets(query: String): Future[JsValue] = {
 <div>
     <h2>Add the Tweet Map</h2>
 
-    <p>1. The webjar dependency on leaflets has already been added to <a href="#code/build.sbt" class="shortcut">build.sbt</a></p>
+    <p><b>1.</b> The webjar dependency on leaflets has already been added to <a href="#code/build.sbt" class="shortcut">build.sbt</a></p>
 
-    <p>2. The Leaflet CSS and JS have already been added to <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html </a>file:</p>
+    <p><b>2.</b> The Leaflet CSS and JS have already been added to <a href="#code/app/views/main.scala.html" class="shortcut">main.scala.html </a>file:</p>
 
 <pre><code>
     &lt;link rel='stylesheet' href='@routes.Assets.versioned("lib/leaflet/leaflet.css")'&gt;
@@ -357,17 +357,17 @@ def fetchTweets(query: String): Future[JsValue] = {
     &lt;script type='text/javascript' src='@routes.Assets.versioned("lib/angular-leaflet-directive/angular-leaflet-directive.min.js")'&gt;&lt;/script&gt;
 </code></pre>
 
-    <p>3. Above the &lt;ul&gt; in <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html </a> add a map:</p>
+    <p><b>3.</b> Above the &lt;ul&gt; in <a href="#code/app/views/index.scala.html" class="shortcut">index.scala.html </a> add a map:</p>
     <pre><code>&lt;leaflet width="100%" height="500px" markers="markers"&gt;&lt;/leaflet&gt;</code></pre>
 
 
-    <p>4. Update the first line of <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> with:</p>
+    <p><b>4.</b> Update the first line of <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> with:</p>
 
 <pre><code>
     var app = angular.module('tweetMapApp', ["leaflet-directive"]);
 </code></pre>
 
-    <p>5. Update the body of the app.controller('Tweets' ... section of the <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> file with the following:</p>
+    <p><b>5.</b> Update the body of the app.controller('Tweets' ... section of the <a href="#code/app/assets/javascripts/index.js" class="shortcut">index.js </a> file with the following:</p>
 
 <pre><code>
     $scope.tweets = [];
@@ -396,17 +396,14 @@ def fetchTweets(query: String): Future[JsValue] = {
 
 </code></pre>
 
-
-
-
-<p>8. Go to <a href="http://localhost:9000" target="_blank">http://localhost:9000</a> to see the TweetMap!</p>
+<p><b>6.</b> Go to <a href="http://localhost:9000" target="_blank">http://localhost:9000</a> to see the TweetMap!</p>
 </div>
 
 <div>
 
     <h2>Test the Controller</h2>
 
-    <p>1. Update the test/ApplicationSpec.scala file with these tests:</p>
+    <p><b>1.</b> Update the test/ApplicationSpec.scala file with these tests:</p>
 
     <code><pre>
 import org.specs2.mutable._
@@ -443,13 +440,13 @@ import play.api.test.Helpers._
 }
  </pre></code>
 
-    <p>2. Run the tests in Activator</p>
+    <p><b>2.</b> Run the tests in Activator</p>
 </div>
 
 <div>
     <h2>Test the Actor</h2>
 
-    <p>1. The dependency on the Akka Test Kit has already been added to <a href="#code/build.sbt" class="shortcut">build.sbt</a></p>
+    <p><b>1.</b> The dependency on the Akka Test Kit has already been added to <a href="#code/build.sbt" class="shortcut">build.sbt</a></p>
 
 
     <code><pre>
@@ -504,6 +501,452 @@ class UserActorSpec extends Specification with NoTimeConversions {
 
     </pre></code>
 </div>
+
+<div>
+
+    <h2>Achitecture Pitfalls?</h2>
+
+    <p>What are some of the problems with the current architecture?</p>
+    <p><b>1. </b>fetchTweets is inside the Application conroller and is called from the UserActor - poor separation of concerns.</p>
+    <p><b>2. </b>fetchTweets should be a separate service that can be run and scaled independently from the rest of the application and managed independently.  </p>
+    <p><b>3. </b>In a production scenario the fetchTweets service would need a twitter api token and would need to be shared between clients. The service should be designed in a way that it can be reused and scaled indepedntly. </p>
+
+</div>
+
+<div>
+
+    <h2>Fetch Tweets Service - Akka Actor</h2>
+
+    <p>Create a new actor that will act as the Global Fetch Tweet Loader.  Note that the Play WS API requires a running Play Application - it takes an implicit app: Application.  If it where used in the Akka Actor then the actor could not be run independent from the Play Application.</p>
+    <p>To get around this limitation we use the TweetAPI that is defined in <a href="#code/app/actors/TweetAPI.scala" class="shortcut">TweetAPI.scala</a> to call the twitter WS API.  It creates a WS client without requiring a Play Application.</p>
+
+    <p><b>1. </b>Create a new TweetLoader.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> with the following actor:</p>
+<code><pre>
+package actors
+
+import akka.actor._
+import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.json._
+import scala.util._
+import scala.util.Failure
+import scala.util.Success
+import play.api.libs.json.JsObject
+
+/**
+ * Tweet Loader Actor
+ */
+class TweetLoader extends Actor with ActorLogging {
+
+    override def receive: Receive = {
+        case TweetLoader.LoadTweet(search) => {
+            implicit val ec: ExecutionContext = context.system.dispatcher
+            fetchTweets(search) onComplete {
+                case Success(respJson) ⇒ {
+                    log.info(s"tweet loader returning json")
+                    sender() ! TweetLoader.NewTweet(respJson)
+                }
+                case Failure(f) ⇒ {
+                    log.info(s"tweet loader failed!")
+                    sender() ! Status.Failure(f)
+                }
+            }
+        }
+    }
+
+    // searches for tweets based on a query
+    def fetchTweets(query: String)(implicit ec: ExecutionContext): Future[JsValue] = {
+        val tweetsFuture = TweetAPI.tweetWS(query)
+
+        tweetsFuture.flatMap { response =>
+            tweetLatLon((response.json \ "statuses").as[Seq[JsValue]])
+        } recover {
+            case errMsg => {
+                log.error(s"ERROR Loading Tweets: $errMsg")
+                Seq.empty[JsValue]
+            }
+        } map { tweets =>
+            Json.obj("statuses" -> tweets)
+        }
+    }
+
+
+    private def putLatLonInTweet(latLon: JsValue) = __.json.update(__.read[JsObject].map(_ + ("coordinates" -> Json.obj("coordinates" -> latLon))))
+
+    private def tweetLatLon(tweets: Seq[JsValue])(implicit ec: ExecutionContext): Future[Seq[JsValue]] = {
+        val tweetsWithLatLonFutures = tweets.map { tweet =>
+            if ((tweet \ "coordinates" \ "coordinates").asOpt[Seq[Double]].isDefined) {
+                Future.successful(tweet)
+            } else {
+                val latLonFuture: Future[(Double, Double)] = (tweet \ "user" \ "location").asOpt[String]
+                    .map(lookupLatLon)
+                    .getOrElse(Future.successful(randomLatLon))
+                latLonFuture.map { latLon =>
+                    tweet.transform(putLatLonInTweet(Json.arr(latLon._2, latLon._1))).getOrElse(tweet)
+                }
+            }
+        }
+        Future.sequence(tweetsWithLatLonFutures)
+    }
+
+    private def randomLatLon: (Double, Double) = ((Random.nextDouble * 180) - 90, (Random.nextDouble * 360) - 180)
+
+    private def lookupLatLon(query: String)(implicit ec: ExecutionContext): Future[(Double, Double)] = {
+        val locationFuture = TweetAPI.geocodeWS(query)
+
+        locationFuture.map { response =>
+            (response.json \\ "location").headOption.map { location =>
+                ((location \ "lat").as[Double], (location \ "lng").as[Double])
+            }.getOrElse(randomLatLon)
+        }
+    }
+}
+
+object TweetLoader {
+    case class LoadTweet(search: String)
+    case class NewTweet(tweet: JsValue)
+
+    def props(): Props = {
+        Props(new TweetLoader())
+    }
+}
+
+ </pre></code>
+   
+</div>
+
+<div>
+
+    <h2>Fetch Tweets Service - Play Plugin</h2>
+
+    <p>Fetch tweets will be a global service that all clients will share.  This will be done by creating an Actors Play Plugin that will create a global instance of the actor and then registering it as a Play plugin.</p>
+
+    <p><b>1. </b>The file<a href="#code/app/actors/Actors.scala" class="shortcut">/actors/Actors.scala</a> was already added that defines the Actor plugin.  This file just needs to be updated to load the Tweet Loader Actor - uncomment the two lines that create the refrence to the Actor.</p>
+ 
+ <code><pre>
+        def tweetLoader(implicit app: Application) = actors.tweetLoader
+ </pre></code>
+
+<code><pre>
+        private lazy val tweetLoader = system.actorOf(TweetLoader.props, "tweetLoader")
+ </pre></code>
+
+    <p><b>2. </b>To register the plugin the file <a href="#code/conf/play.plugins" class="shortcut">/conf/play.plugins</a> was already added that configures the Actor plugin.  The number represents the plugin loading order, by setting it to > 10000 we make sure it’s loaded after the global plugins.</p>
+ <code><pre>
+    1200:actors.Actors
+ </pre></code>
+
+</div>
+<div>
+
+    <h2>Update UserActor</h2>
+
+    <p><a href="#code/app/actors/UserActor.scala" class="shortcut">/app/actors/UserActor.scala</a> currently calls back into the main Application methods to fetch tweets.  Change the code so that it gets a refrence the Tweet Loader Actor and call it to ftech tweets:</p>
+
+    <p><b>1. </b>Update the constructor and props to take a refrence to the TweetLoader Actor as parameters:</p>
+ 
+ <code><pre>
+    class UserActor(out: ActorRef, tweetLoader: ActorRef) .... 
+
+    def props(out: ActorRef, tweetLoader: ActorRef): Props = {
+        Props(new UserActor(out, tweetServiceClient))
+    }
+ </pre></code>
+
+    <p><b>2. </b>Change the FetchTweets handler to use the tweetLoader actor refrence:</p>
+ 
+ <code><pre>
+    case UserActor.FetchTweets =>
+            maybeQuery.foreach { query =>
+                tweetLoaderClient ! TweetLoader.LoadTweet(query)
+            }
+ </pre></code>
+
+ <p><b>3. </b>Add a message handler that processes the new tweets from the Tweet Loader:</p>
+ 
+ <code><pre>
+        case TweetLoader.NewTweet(tweet) => {
+            log.info(s"New Tweet received - sending back to client")
+            out ! tweet
+        }
+ </pre></code>
+
+<p><b>4. </b>Update the creation of the UserActor to reference the tweet loader: .</p>
+
+<code><pre>
+    def ws = WebSocket.acceptWithActor[JsValue, JsValue] { request => out =>
+            Props(new UserActor(out, Actors.tweetLoader))
+    }
+</pre></code>
+
+<p><b>5. </b>Test out your changes - warning a subtle bug has been introduced that breaks the code.</p>
+</div>
+
+<div>
+
+    <h2>Find and Fix the Bug!</h2>
+
+    <p>Any clues into why the tweets are not being returned back to the client?  Where in the message flow are they being lost?</p>
+
+    <p><b>1. </b>Did you notice an error similiar to the following in the console?</p>
+ 
+ <code><pre>
+   [INFO] [09/13/2014 22:58:33.764] [application-akka.actor.default-dispatcher-3] [akka://application/deadLetters] Message [actors.TweetLoader$NewTweet] from Actor[akka://application/user/tweetLoader#1309203340] to Actor[akka://application/deadLetters] was not delivered. [5] dead letters encountered. This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+ </pre></code>
+
+<p><b>2. </b>Update <a href="#code/app/actors/TweetLoader.scala" class="shortcut">/app/actors/TweetLoader.scala</a>  to print out the sender it is sending the JSON back to:
+ <code><pre>
+    log.info(s"tweet loader returning json to ${sender()}")
+ </pre></code>
+
+<p><b>3. </b>TweetLoader is calling the sender() in the callback to a future.  When sender() gets called in the future, sender() is no longer valid and instead points to dead letters - the equivalent of /dev/null in Akka. Instead we need to capture the sender() Actor Refrence and use that instead. </p>
+ <code><pre>
+    val querySender = sender()
+    ...
+    log.info(s"tweet loader returning json to ${querySender.path}")
+    querySender ! TweetLoader.NewTweet(respJson)
+ </pre></code>
+<p><b>4. </b>Now test out your changes - everything should be working!</p>
+
+ </div> 
+
+ <div>
+
+    <h2>Clustering - Part 0</h2>
+
+<p>Need an explination of akka remoting and clustering here - even just a basic intro.</p>
+
+    <p>Seperating out the Tweet Loader definetly improved the architecture.  Now lets make the Tweet Loader fully reactive by making it a separate service that can be run independently from the main Play Application.</p>
+
+    <p><b>1. </b>First update <a href="#code/conf/application.conf" class="shortcut">/conf/application.conf</a> to add configuration for Akka Clustering by adding the following at the end of the file.  This enables Akka remoting, defines the actor provider to use cluster and defines the seed nodes used to initate the cluster.</p>
+ 
+ <code><pre>
+   # Akka configuration
+akka {
+
+  loglevel = INFO
+
+  #This changes the actor provider from being local to being cluster aware.
+  actor.provider = "akka.cluster.ClusterActorRefProvider"
+
+  remote.netty.tcp {
+    hostname = "127.0.0.1"
+    port = 2551
+  }
+
+  cluster {
+    #seed nodes are the nodes that other nodes look for to join the cluster.
+    seed-nodes = ["akka.tcp://application@127.0.0.1:2551", "akka.tcp://application@127.0.0.1:2552"]
+    #the default cluster role
+    roles = ["frontend"]
+    auto-down = on
+  }
+}
+</pre></code>
+
+<p><b>2. </b>Create a new folder /app/backend and add to it a file called MainTweetLoader.scala.  This will be used to start a stand-alone Akka cluster node.  All that it needs to do is use a Java main to start-up and create an Akka actor system:</p>
+ <code><pre>
+    package backend
+
+import akka.actor._
+import com.typesafe.config.ConfigFactory
+import scala.io.StdIn
+
+/**
+ * Main class for starting shard nodes.
+ */
+object MainTweetLoader {
+
+    def main(args: Array[String]): Unit = {
+        //The first parameter is the port to start the remote listener on.  It defaults to 0
+        //which causes akka to start the remote listener on a random port.
+        val system = if (args.isEmpty)
+            startSystem("0")
+        else
+            startSystem(args(0))
+
+        commandLoop(system)
+    }
+
+    def startSystem(port: String) = {
+
+        val role = "backend-loader"
+        val config = ConfigFactory.parseString(s"akka.cluster.roles=[$role]").
+            withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)).
+            withFallback(ConfigFactory.load())
+
+        // Create an actor system with the name of application - this is the same name
+        // that play uses for it's actor system.  The names need to be the same so they
+        // can join together in a cluster.
+        ActorSystem("application", config)
+    }
+
+    def commandLoop(system: ActorSystem): Unit = {
+        val line: String = StdIn.readLine()
+        if (line.startsWith("s")) {
+            system.shutdown()
+        } else {
+            commandLoop(system)
+        }
+    }
+}
+
+ </pre></code>
+
+<p><b>3. </b> An sbt command alias has already been added to the build in <a href="#code/build.sbt" class="shortcut">/build.sbt</a></p>
+
+ <code><pre>
+    addCommandAlias("rb", "runMain backend.MainTweetLoader 2552 -Dakka.remote.netty.tcp.port=2552 -Dakka.cluster.roles.0=backend-loader")
+ </pre></code>
+
+<p><b>4. </b>Test out the changes.  First completely shutdown the play server and restart it.  Then in a separate terminal window start an instance of the backend service by running:</p>
+ 
+    <code><pre>
+  sbt rb
+ </pre></code>
+
+<p>The backend node can be stopped by simply typing a 's' and hitting enter in the terminal window.
+
+ <p>You should see in the log output of the terminal windows the cluster being started and the backend joining into the cluster.  In the play log you should see something similiar to:</p>
+<code><pre>
+    Node [akka.tcp://application@127.0.0.1:2551] is JOINING, roles [frontend]
+    Leader is moving node [akka.tcp://application@127.0.0.1:2551] to [Up]
+    Cluster Node [akka.tcp://application@127.0.0.1:2551] - Node [akka.tcp://application@127.0.0.1:2552] is JOINING, roles [backend-loader]
+ </pre></code>
+ <p>And in the second terminal window you should see something similiar to:</p>
+ <code><pre>
+    Cluster Node [akka.tcp://application@127.0.0.1:2552] - Started up successfully
+    Cluster Node [akka.tcp://application@127.0.0.1:2552] - Welcome from [akka.tcp://application@127.0.0.1:2551]
+ </pre></code>
+
+ </div>   
+  
+ <div>
+
+    <h2>Clustering - Part 1</h2>
+
+<p>Need an explination of cluster routers here!</p>
+
+<p><b>1. </b>Update the akka configuration to add a router that uses the tweet loader by updating <a href="#code/conf/application.conf" class="shortcut">/conf/application.conf</a> to add:</p>
+
+ <code><pre>
+ actor.deployment {
+    # Routing to the tweetLoader using a cluster router
+    # By making the router a group it will look for an existing instance of the tweetLoader actor
+    # on any nodes with the role "backend-loader" and use it as a routee
+    /tweetLoaderClient/router {
+      router = round-robin-group
+      nr-of-instances = 1000
+      cluster {
+        enabled = on
+        routees-path = "/user/tweetLoader"
+        allow-local-routees = off
+        use-role = "backend-loader"
+      }
+    }
+  }
+ </pre></code>
+
+    <p><b>2. </b>Next we want to create an actor that will run on the main Play server and act as a client into the cluster.  We use this by creating a separate Actor that uses that sends messages to the cluster router.</p>
+
+    <p>Create a new TweetLoaderClient.scala file in <a href="#code/app/actors" class="shortcut">/app/actors</a> with the following actor that routes messages to the tweet loader router:</p>
+
+<code><pre>
+   package actors
+
+import akka.actor.{ActorLogging, Actor, Props}
+import akka.routing.FromConfig
+
+object TweetLoaderClient {
+    def props(): Props = Props(new TweetLoaderClient())
+}
+
+/**
+ * A client for the tweet loader, handles routing of the fetch tweet messages to the actual tweet loader
+ */
+class TweetLoaderClient extends Actor with ActorLogging {
+
+    val tweetLoaderRouter = context.actorOf(Props.empty.withRouter(FromConfig), "router")
+
+    def receive = {
+        case TweetLoader.LoadTweet(search) => {
+            log.info(s"sending search for $search to router")
+            tweetLoaderRouter ! TweetLoader.LoadTweet(search)
+        }
+    }
+}
+</pre></code>
+
+<p><b>3. </b>Update the Actors Plugin to refrence the tweet loader client instead of the actual tweet loader:</p>
+ <code><pre>
+    def tweetLoaderClient(implicit app: Application) = actors.tweetLoaderClient
+
+    private lazy val tweetLoaderClient = system.actorOf(TweetLoaderClient.props, "tweetLoaderClient")
+ </pre></code>
+
+ <p><b>4. </b>Update the creation of the UserActor to reference the tweet loader client (instead of just the tweet loader): .</p>
+
+<code><pre>
+    def ws = WebSocket.acceptWithActor[JsValue, JsValue] { request => out =>
+            Props(new UserActor(out, Actors.tweetLoaderClient))
+    }
+</pre></code>
+
+<p><b>5. </b>Update the MainTweetLoader to create an instance of the TweetLoader actor.  First add an initialization method and then call if from the main startup block:</p>
+ <code><pre>
+
+    def initialize(system: ActorSystem): Unit = {
+        //verify that this cluster node is running with the role of "backend-loader"
+        if (Cluster(system).selfRoles.exists(r => r.startsWith("backend-loader"))) {
+            system.actorOf(TweetLoader.props(), "tweetLoader")
+        }
+    }
+
+
+    //in the main method add a call to initialize:
+    initialize(system)
+ </pre></code>
+
+ <p><b>6.</b> Test out the code - beware bugs abound! </p>
+
+ </div>   
+
+ <div>
+
+    <h2>Fixing Clustering - Part 0</h2>
+
+<p><b>1. </b>Any guess as to what is broken?  Did you see the error in the console: </p>
+
+ <code><pre>
+    akka.ConfigurationException: Configuration missing for router [akka://application/user/tweetLoader/router] in 'akka.actor.deployment' section.
+</pre></code>
+
+<p>The problem is that the tweetLoaderClient is being created with the wrong name, then when it loads the router it looks for it under the wrong name (tweetLoader instead of tweetLoaderClient).  Fix it by changing the Acotrs.scala class to create the tweetLoaderClient with the right name:</p>
+
+ <code><pre>
+private lazy val tweetLoaderClient = system.actorOf(TweetLoaderClient.props, "tweetLoaderClient")
+</pre></code>
+
+<p><b>2.</b> Test out the code - one more bugs remains! This is a much more subtle bug.  Print out the sender in the tweetLoader and see if you can find it!</b></p>
+</div>   
+  
+ <div>
+
+    <h2>Fixing Clustering - Part 2</h2>
+
+<p>The problem is the tweetLoader is sending the results of fetching the tweet back to the TweetLoaderClient and not the UserActor.   The solution is straight forward - have the tweetLoaderClient forward the message instead of directly sending it.</p>
+
+<p><b>1.</b> Change TweetLoaderClient receive block to use a forward instead of tell to send messages to the tweetLoaderRouter</p>
+
+ <code><pre>
+        case TweetLoader.LoadTweet(search) => {
+            log.info(s"forwarding search for $search to router")
+            tweetLoaderRouter forward TweetLoader.LoadTweet(search)
+        }
+</pre></code>
+
+ <p><b>2.</b> Test out the code - everything should work! </p>
+
+</div> 
 
 </body>
 </html>
