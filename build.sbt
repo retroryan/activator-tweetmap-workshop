@@ -1,11 +1,10 @@
-
 name := """tweetmap-workshop"""
 
-version := "0.42"
+version := "0.43"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.2"
 
 val akka = "2.3.6"
 
@@ -17,7 +16,8 @@ libraryDependencies ++= Seq(
   "org.webjars" % "angular-leaflet-directive" % "0.7.6",
   "com.typesafe.akka" %% "akka-contrib" % akka,
   "com.typesafe.akka" %% "akka-cluster" % akka,
-  "com.typesafe.akka" %% "akka-testkit" % akka % "test"
+  "com.typesafe.akka" %% "akka-testkit" % akka % "test",
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 )
 
 // Apply digest calculation and gzip compression to assets
