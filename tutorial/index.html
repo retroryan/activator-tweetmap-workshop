@@ -406,10 +406,6 @@ def fetchTweets(query: String): Future[JsValue] = {
     <p><b>1.</b> Update the test/ApplicationSpec.scala file with these tests:</p>
 
     <code><pre>
-import org.specs2.mutable._
-import org.specs2.runner._
-import org.junit.runner._
-
 import play.api.libs.json.JsValue
 import play.api.test._
 import play.api.test.Helpers._
@@ -424,17 +420,17 @@ import play.api.test.Helpers._
     "render the index page" in new WithApplication{
         val home = route(FakeRequest(GET, "/")).get
 
-        status(home) must equalTo(OK)
-        contentType(home) must beSome.which(_ == "text/html")
-        contentAsString(home) must contain ("TweetMap")
+        status(home) must be(OK)
+        contentType(home) must be("text/html")
+        contentAsString(home) must contain ("Tweets")
     }
 
     "search for tweets" in new WithApplication {
-        val search = controllers.Application.search("typesafe")(FakeRequest())
+        val search = controllers.Tweets.search("typesafe")(FakeRequest())
 
-        status(search) must equalTo(OK)
-        contentType(search) must beSome("application/json")
-        (contentAsJson(search) \ "statuses").as[Seq[JsValue]].length must beGreaterThan(0)
+        status(search) must be(OK)
+        contentType(search) must be("application/json")
+        (contentAsJson(search) \ "statuses").as[Seq[JsValue]].length must be > 0
     }
 
 }
@@ -450,55 +446,40 @@ import play.api.test.Helpers._
 
 
     <code><pre>
-import actors.UserActor
-import akka.testkit.TestActorRef
-import org.specs2.mutable._
-import org.specs2.runner._
-import org.specs2.time.NoTimeConversions
-import org.junit.runner._
+package actors
 
-import play.api.libs.concurrent.Akka
-import play.api.libs.json.{JsValue, Json}
+import akka.testkit.{ TestActorRef, TestKit, TestProbe }
+import akka.actor.{ ActorSystem, Props }
+import play.api.libs.json.{ JsValue, Json }
 import play.api.test._
-
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Promise}
+import org.scalatest.{ WordSpecLike, MustMatchers }
 
-@RunWith(classOf[JUnitRunner])
-class UserActorSpec extends Specification with NoTimeConversions {
+class UserActorSpec extends TestKit(ActorSystem("UserActorAS")) with WordSpecLike with MustMatchers {
+    "Calling maybeQuery on a UserActor" should {
+      "result in an appropriate search term being created" in new WithApplication {      
+      val testUserActorRef = TestActorRef(new UserActor(system.deadLetters))
+      val querySearchTerm1 = "scala"
+      val jsonQuery1 = Json.obj("query" -> querySearchTerm1)
+      testUserActorRef ! jsonQuery1
+      testUserActorRef.underlyingActor.maybeQuery.getOrElse("") mustEqual(querySearchTerm1)
+      }
+    }
 
-    "UserActor" should {
+  "Sending query requests to a UserActor" should {
+    "fetch tweets for concurrent requests with each response going to the appropriate client" in new WithApplication {
+      val probe1 = TestProbe()
+      val userActorRef = system.actorOf(Props(new UserActor(probe1.ref)))
 
-        "fetch tweets" in new WithApplication {
+      val jsonQuery1 = Json.obj("query" -> "scala")
+      userActorRef ! jsonQuery1
 
-            //make the Play Application Akka Actor System available as an implicit actor system
-            implicit val actorSystem = Akka.system
-
-            //This is the function called by UserActor when it fetches tweets.  The function fullfills a promise
-            //with the tweets, which allows the results to be tested.
-            val promiseJson = Promise[Seq[JsValue]]()
-            def validateJson(jsValue: JsValue) {
-                val tweets = (jsValue \ "statuses").as[Seq[JsValue]]
-                promiseJson.success(tweets)
-            }
-
-            val userActorRef = TestActorRef(new UserActor(validateJson))
-
-            val querySearchTerm = "scala"
-            val jsonQuery = Json.obj("query" -> querySearchTerm)
-
-            // The tests need to be delayed a certain amount of time so the tick message gets fired.  This can be done using either
-            // Await.result below or using the Akka test kit within(testDuration) {
-
-            userActorRef ! jsonQuery
-            userActorRef.underlyingActor.maybeQuery.getOrElse("") must beEqualTo(querySearchTerm)
-
-            Await.result(promiseJson.future, 10.seconds).length must beGreaterThan(1)
-
-        }
-     }
+      implicit val timeout = 10 seconds
+      val result = probe1.expectMsgType[JsValue](timeout)
+      result.toString.length() must be > 1
+    }
+  }
 }
-
     </pre></code>
 </div>
 
