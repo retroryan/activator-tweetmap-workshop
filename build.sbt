@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-contrib" % akka,
   "com.typesafe.akka" %% "akka-cluster" % akka,
   "com.typesafe.akka" %% "akka-testkit" % akka % "test",
-  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+  "org.scalatestplus" %% "play" % "1.1.0" % "test"
 )
 
 // Apply digest calculation and gzip compression to assets
