@@ -414,22 +414,22 @@ import play.api.test.Helpers._
 
     "render index template" in new WithApplication {
         val html = views.html.index("Coco")
-        contentAsString(html) must contain("Coco")
+        contentAsString(html) must include("Coco")
     }
 
     "render the index page" in new WithApplication{
         val home = route(FakeRequest(GET, "/")).get
 
         status(home) must be(OK)
-        contentType(home) must be("text/html")
-        contentAsString(home) must contain ("Tweets")
+        contentType(home) must be(Some("text/html"))
+        contentAsString(home) must include("Tweets")
     }
 
     "search for tweets" in new WithApplication {
         val search = controllers.Tweets.search("typesafe")(FakeRequest())
 
         status(search) must be(OK)
-        contentType(search) must be("application/json")
+        contentType(search) must be(Some("application/json"))
         (contentAsJson(search) \ "statuses").as[Seq[JsValue]].length must be > 0
     }
 
