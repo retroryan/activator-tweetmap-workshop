@@ -179,7 +179,7 @@ app.controller('Tweets', function($scope, $http, $timeout, Twitter) {
 
 package actors
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{ActorLogging, Actor, ActorRef, Props}
 import play.api.libs.json.JsValue
 import scala.concurrent.duration._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -189,7 +189,7 @@ import controllers.Tweets
 *   When a message is sent to out the Play Framework then sends it to the client WebSocket.
 *
 **/
-class UserActor(out: ActorRef) extends Actor {
+class UserActor(out: ActorRef) extends Actor with ActorLogging {
 
     //The query is optional so that it starts as a None until the user issues the first query.
     var maybeQuery: Option[String] = None
@@ -439,56 +439,13 @@ import play.api.test.Helpers._
     <p><b>2.</b> Run the tests in Activator</p>
 </div>
 
-<div>
-    <h2>Test the Actor</h2>
-
-    <p><b>1.</b> The dependency on the Akka Test Kit has already been added to <a href="#code/build.sbt" class="shortcut">build.sbt</a></p>
-
-
-    <code><pre>
-package actors
-
-import akka.testkit.{ TestActorRef, TestKit, TestProbe }
-import akka.actor.{ ActorSystem, Props }
-import play.api.libs.json.{ JsValue, Json }
-import play.api.test._
-import scala.concurrent.duration._
-import org.scalatest.{ WordSpecLike, MustMatchers }
-
-class UserActorSpec extends TestKit(ActorSystem("UserActorAS")) with WordSpecLike with MustMatchers {
-    "Calling maybeQuery on a UserActor" should {
-      "result in an appropriate search term being created" in new WithApplication {      
-      val testUserActorRef = TestActorRef(new UserActor(system.deadLetters))
-      val querySearchTerm1 = "scala"
-      val jsonQuery1 = Json.obj("query" -> querySearchTerm1)
-      testUserActorRef ! jsonQuery1
-      testUserActorRef.underlyingActor.maybeQuery.getOrElse("") mustEqual(querySearchTerm1)
-      }
-    }
-
-  "Sending query requests to a UserActor" should {
-    "fetch tweets for concurrent requests with each response going to the appropriate client" in new WithApplication {
-      val probe1 = TestProbe()
-      val userActorRef = system.actorOf(Props(new UserActor(probe1.ref)))
-
-      val jsonQuery1 = Json.obj("query" -> "scala")
-      userActorRef ! jsonQuery1
-
-      implicit val timeout = 10 seconds
-      val result = probe1.expectMsgType[JsValue](timeout)
-      result.toString.length() must be > 1
-    }
-  }
-}
-    </pre></code>
-</div>
 
 <div>
 
     <h2>Achitecture Pitfalls?</h2>
 
     <p>What are some of the problems with the current architecture?</p>
-    <p><b>1. </b>fetchTweets is inside the Application conroller and is called from the UserActor - poor separation of concerns.</p>
+    <p><b>1. </b>fetchTweets is inside the Application controller and is called from the UserActor - poor separation of concerns.</p>
     <p><b>2. </b>fetchTweets should be a separate service that can be run and scaled independently from the rest of the application and managed independently.  </p>
     <p><b>3. </b>In a production scenario the fetchTweets service would need a twitter api token and would need to be shared between clients. The service should be designed in a way that it can be reused and scaled indepedntly. </p>
 
@@ -601,7 +558,7 @@ object TweetLoader {
 
     <p>Fetch tweets will be a global service that all clients will share.  This will be done by creating an Actors Play Plugin that will create a global instance of the actor and then registering it as a Play plugin.</p>
 
-    <p><b>1. </b>The file<a href="#code/app/actors/Actors.scala" class="shortcut">/actors/Actors.scala</a> was already added that defines the Actor plugin.  This file just needs to be updated to load the Tweet Loader Actor - uncomment the two lines that create the refrence to the Actor.</p>
+    <p><b>1. </b>The file<a href="#code/app/actors/Actors.scala" class="shortcut">/actors/Actors.scala</a> was already added that defines the Actor plugin.  This file just needs to be updated to load the Tweet Loader Actor - uncomment the two lines that create the reference to the Actor.</p>
  
  <code><pre>
         def tweetLoader(implicit app: Application) = actors.tweetLoader
@@ -611,7 +568,7 @@ object TweetLoader {
         private lazy val tweetLoader = system.actorOf(TweetLoader.props, "tweetLoader")
  </pre></code>
 
-    <p><b>2. </b>To register the plugin the file <a href="#code/conf/play.plugins" class="shortcut">/conf/play.plugins</a> was already added that configures the Actor plugin.  The number represents the plugin loading order, by setting it to > 10000 we make sure it’s loaded after the global plugins.</p>
+    <p><b>2. </b>To register the plugin the file <a href="#code/conf/play.plugins" class="shortcut">/conf/play.plugins</a> was already added that configures the Actor plugin.  The number represents the plugin loading order, by setting it to > 1000 we make sure it’s loaded after the global plugins.</p>
  <code><pre>
     1200:actors.Actors
  </pre></code>
@@ -621,24 +578,24 @@ object TweetLoader {
 
     <h2>Update UserActor</h2>
 
-    <p><a href="#code/app/actors/UserActor.scala" class="shortcut">/app/actors/UserActor.scala</a> currently calls back into the main Application methods to fetch tweets.  Change the code so that it gets a refrence the Tweet Loader Actor and call it to ftech tweets:</p>
+    <p><a href="#code/app/actors/UserActor.scala" class="shortcut">/app/actors/UserActor.scala</a> currently calls back into the main Application methods to fetch tweets.  Change the code so that it gets a reference the Tweet Loader Actor and call it to fetch tweets:</p>
 
-    <p><b>1. </b>Update the constructor and props to take a refrence to the TweetLoader Actor as parameters:</p>
+    <p><b>1. </b>Update the constructor and props to take a reference to the TweetLoader Actor as parameters:</p>
  
  <code><pre>
     class UserActor(out: ActorRef, tweetLoader: ActorRef) .... 
 
     def props(out: ActorRef, tweetLoader: ActorRef): Props = {
-        Props(new UserActor(out, tweetServiceClient))
+        Props(new UserActor(out, tweetLoader))
     }
  </pre></code>
 
-    <p><b>2. </b>Change the FetchTweets handler to use the tweetLoader actor refrence:</p>
+    <p><b>2. </b>Change the FetchTweets handler to use the tweetLoader actor reference:</p>
  
  <code><pre>
     case UserActor.FetchTweets =>
             maybeQuery.foreach { query =>
-                tweetLoaderClient ! TweetLoader.LoadTweet(query)
+                tweetLoader ! TweetLoader.LoadTweet(query)
             }
  </pre></code>
 
@@ -651,11 +608,11 @@ object TweetLoader {
         }
  </pre></code>
 
-<p><b>4. </b>Update the creation of the UserActor to reference the tweet loader: .</p>
+<p><b>4. </b>Update the creation of the UserActor in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> to reference the tweet loader: .</p>
 
 <code><pre>
     def ws = WebSocket.acceptWithActor[JsValue, JsValue] { request => out =>
-            Props(new UserActor(out, Actors.tweetLoader))
+            UserActor.props(out, actors.Actors.tweetLoader)
     }
 </pre></code>
 
@@ -668,7 +625,7 @@ object TweetLoader {
 
     <p>Any clues into why the tweets are not being returned back to the client?  Where in the message flow are they being lost?</p>
 
-    <p><b>1. </b>Did you notice an error similiar to the following in the console?</p>
+    <p><b>1. </b>Did you notice an error similar to the following in the console?</p>
  
  <code><pre>
    [INFO] [09/13/2014 22:58:33.764] [application-akka.actor.default-dispatcher-3] [akka://application/deadLetters] Message [actors.TweetLoader$NewTweet] from Actor[akka://application/user/tweetLoader#1309203340] to Actor[akka://application/deadLetters] was not delivered. [5] dead letters encountered. This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
@@ -679,7 +636,7 @@ object TweetLoader {
     log.info(s"tweet loader returning json to ${sender()}")
  </pre></code>
 
-<p><b>3. </b>TweetLoader is calling the sender() in the callback to a future.  When sender() gets called in the future, sender() is no longer valid and instead points to dead letters - the equivalent of /dev/null in Akka. Instead we need to capture the sender() Actor Refrence and use that instead. </p>
+<p><b>3. </b>TweetLoader is calling the sender() in the callback to a future.  When sender() gets called in the future, sender() is no longer valid and instead points to dead letters - the equivalent of /dev/null in Akka. Instead we need to capture the sender() Actor reference and use that instead. </p>
  <code><pre>
     val querySender = sender()
     ...
@@ -857,7 +814,7 @@ class TweetLoaderClient extends Actor with ActorLogging {
 }
 </pre></code>
 
-<p><b>3. </b>Update the Actors Plugin to refrence the tweet loader client instead of the actual tweet loader:</p>
+<p><b>3. </b>Update the Actors Plugin to reference the tweet loader client instead of the actual tweet loader:</p>
  <code><pre>
     def tweetLoaderClient(implicit app: Application) = actors.tweetLoaderClient
 
