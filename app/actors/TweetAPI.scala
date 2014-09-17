@@ -9,8 +9,9 @@ trait TweetAPI {
 
     implicit val ec: ExecutionContext
 
+    lazy val builder = new NingAsyncHttpClientConfigBuilder(DefaultWSClientConfig())
+
     class TweetWS extends WSAPI {
-        val builder = new NingAsyncHttpClientConfigBuilder(DefaultWSClientConfig())
         override def client: WSClient = new NingWSClient(builder.build())
         override def url(url: String): WSRequestHolder = client.url(url)
     }

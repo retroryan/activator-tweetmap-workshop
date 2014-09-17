@@ -636,12 +636,25 @@ object TweetLoader {
     log.info(s"tweet loader returning json to ${sender()}")
  </pre></code>
 
-<p><b>3. </b>TweetLoader is calling the sender() in the callback to a future.  When sender() gets called in the future, sender() is no longer valid and instead points to dead letters - the equivalent of /dev/null in Akka. Instead we need to capture the sender() Actor reference and use that instead. </p>
+<p><b>3. </b><a href="#code/app/actors/TweetLoader.scala" class="shortcut">/app/actors/TweetLoader.scala</a> is calling the sender() in the callback to a future.
+    When sender() gets called in the future, sender() is no longer valid and instead points to dead letters - the equivalent of /dev/null in Akka. Instead we need to capture the sender() Actor reference and use that instead. </p>
  <code><pre>
-    val querySender = sender()
-    ...
-    log.info(s"tweet loader returning json to ${querySender.path}")
-    querySender ! TweetLoader.NewTweet(respJson)
+    case TweetLoader.LoadTweet(search) => {
+            val querySender = sender()
+
+            implicit val ec: ExecutionContext = context.system.dispatcher
+
+            fetchTweets(search) onComplete {
+                case Success(respJson) ⇒ {
+                    log.info(s"tweet loader returning json to ${querySender.path}")
+                    querySender ! TweetLoader.NewTweet(respJson)
+                }
+                case Failure(f) ⇒ {
+                    log.info(s"tweet loader failed!")
+                    querySender ! Status.Failure(f)
+                }
+            }
+        }
  </pre></code>
 <p><b>4. </b>Now test out your changes - everything should be working!</p>
 
@@ -651,11 +664,9 @@ object TweetLoader {
 
     <h2>Clustering - Part 0</h2>
 
-<p>Need an explination of akka remoting and clustering here - even just a basic intro.</p>
+    <p>Separating out the Tweet Loader definitely improved the architecture.  Now lets make the Tweet Loader fully reactive by making it a separate service that can be run independently from the main Play Application.</p>
 
-    <p>Seperating out the Tweet Loader definetly improved the architecture.  Now lets make the Tweet Loader fully reactive by making it a separate service that can be run independently from the main Play Application.</p>
-
-    <p><b>1. </b>First update <a href="#code/conf/application.conf" class="shortcut">/conf/application.conf</a> to add configuration for Akka Clustering by adding the following at the end of the file.  This enables Akka remoting, defines the actor provider to use cluster and defines the seed nodes used to initate the cluster.</p>
+    <p><b>1. </b>First update <a href="#code/conf/application.conf" class="shortcut">/conf/application.conf</a> to add configuration for Akka Clustering by adding the following at the end of the file.  This enables Akka remoting, defines the actor provider to use cluster and defines the seed nodes used to initiate the cluster.</p>
  
  <code><pre>
    # Akka configuration
@@ -690,7 +701,7 @@ import com.typesafe.config.ConfigFactory
 import scala.io.StdIn
 
 /**
- * Main class for starting shard nodes.
+ * Main class for starting cluster nodes.
  */
 object MainTweetLoader {
 
