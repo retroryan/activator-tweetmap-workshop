@@ -826,22 +826,30 @@ class TweetLoaderClient extends Actor with ActorLogging {
 </pre></code>
 
 <p><b>3. </b>Update the Actors Plugin to reference the tweet loader client instead of the actual tweet loader:</p>
+
+     <p>In the object Actors change the following line to reference tweetLoaderClient:</p>
  <code><pre>
     def tweetLoaderClient(implicit app: Application) = actors.tweetLoaderClient
-
-    private lazy val tweetLoaderClient = system.actorOf(TweetLoaderClient.props, "tweetLoaderClient")
  </pre></code>
 
- <p><b>4. </b>Update the creation of the UserActor to reference the tweet loader client (instead of just the tweet loader): .</p>
-
+     <p>In the class Actors change the following line to reference tweetLoaderClient:</p>
 <code><pre>
-    def ws = WebSocket.acceptWithActor[JsValue, JsValue] { request => out =>
-            Props(new UserActor(out, Actors.tweetLoaderClient))
-    }
-</pre></code>
+         private lazy val tweetLoaderClient = system.actorOf(TweetLoaderClient.props, "tweetLoaderClient")
+ </pre></code>
 
-<p><b>5. </b>Update the MainTweetLoader to create an instance of the TweetLoader actor.  First add an initialization method and then call if from the main startup block:</p>
+ <p><b>4. </b>Update the creation of the UserActor in <a href="#code/app/controllers/Tweets.scala" class="shortcut">app/controllers/Tweets.scala</a> to reference the tweet loader client (instead of just the tweet loader): .</p>
+
+     <code><pre>
+        def ws = WebSocket.acceptWithActor[JsValue, JsValue] { request => out =>
+                UserActor.props(out, actors.Actors.tweetLoaderClient)
+        }
+    </pre></code>
+
+<p><b>5. </b>Update the MainTweetLoader to create an instance of the TweetLoader actor.  First add an initialization method and then call it from the main startup block:</p>
  <code><pre>
+
+     import actors.TweetLoader
+     import akka.cluster.Cluster
 
     def initialize(system: ActorSystem): Unit = {
         //verify that this cluster node is running with the role of "backend-loader"
@@ -850,37 +858,17 @@ class TweetLoaderClient extends Actor with ActorLogging {
         }
     }
 
-
-    //in the main method add a call to initialize:
+    //in the main method add a call to initialize before the main command loop:
     initialize(system)
  </pre></code>
 
- <p><b>6.</b> Test out the code - beware bugs abound! </p>
+ <p><b>6.</b> Test out the code - one more bugs remains! This is a much more subtle bug.  Print out the sender in the tweetLoader and see if you can find it! </p>
 
  </div>   
 
  <div>
 
     <h2>Fixing Clustering - Part 1</h2>
-
-<p><b>1. </b>Any guess as to what is broken?  Did you see the error in the console: </p>
-
- <code><pre>
-    akka.ConfigurationException: Configuration missing for router [akka://application/user/tweetLoader/router] in 'akka.actor.deployment' section.
-</pre></code>
-
-<p>The problem is that the tweetLoaderClient is being created with the wrong name, then when it loads the router it looks for it under the wrong name (tweetLoader instead of tweetLoaderClient).  Fix it by changing the Acotrs.scala class to create the tweetLoaderClient with the right name:</p>
-
- <code><pre>
-private lazy val tweetLoaderClient = system.actorOf(TweetLoaderClient.props, "tweetLoaderClient")
-</pre></code>
-
-<p><b>2.</b> Test out the code - one more bugs remains! This is a much more subtle bug.  Print out the sender in the tweetLoader and see if you can find it!</b></p>
-</div>   
-  
- <div>
-
-    <h2>Fixing Clustering - Part 2</h2>
 
 <p>The problem is the tweetLoader is sending the results of fetching the tweet back to the TweetLoaderClient and not the UserActor.   The solution is straight forward - have the tweetLoaderClient forward the message instead of directly sending it.</p>
 
