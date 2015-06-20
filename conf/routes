@@ -3,6 +3,9 @@
 # ~~~~
 
 GET     /                           controllers.Tweets.index
+GET     /search                     controllers.Tweets.search(query: String)
+
+GET    /ws                          controllers.Tweets.ws
 
 # Use `Assets.versioned` to enable Play 2.3's Asset Fingerprinting
 GET        /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)

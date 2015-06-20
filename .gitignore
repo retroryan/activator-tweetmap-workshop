@@ -15,3 +15,5 @@ dist
 /.settings
 activator-sbt-*-shim.sbt
 /bin
+.sbtserver
+.sbtserver.lock

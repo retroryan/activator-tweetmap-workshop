@@ -24,3 +24,5 @@ libraryDependencies ++= Seq(
 pipelineStages := Seq(digest, gzip)
 
 addCommandAlias("rb", "runMain backend.MainTweetLoader 2552 -Dakka.remote.netty.tcp.port=2552 -Dakka.cluster.roles.0=backend-loader")
+
+fork in run := true
