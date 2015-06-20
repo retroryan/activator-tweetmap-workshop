@@ -1,18 +1,23 @@
-var app = angular.module('tweetMapApp', []);
+var app = angular.module('tweetMapApp', ["leaflet-directive"]);
 
 app.factory('Twitter', function($http, $timeout) {
 
-    var twitterService = {
-        tweets: [],
-        query: function (query) {
-            $http({method: 'GET', url: '/search', params: {query: query}}).
-                success(function (data) {
-                    twitterService.tweets = data.statuses;
-                });
-        }
-    };
+   var ws = new WebSocket("ws://localhost:9000/ws");
 
-    return twitterService;
+       var twitterService = {
+           tweets: [],
+           query: function (query) {
+               ws.send(JSON.stringify({query: query}));
+           }
+       };
+
+       ws.onmessage = function(event) {
+           $timeout(function() {
+               twitterService.tweets = JSON.parse(event.data).statuses;
+           });
+       };
+
+       return twitterService;
 });
 
 app.controller('Search', function($scope, $http, $timeout, Twitter) {
@@ -26,6 +31,7 @@ app.controller('Search', function($scope, $http, $timeout, Twitter) {
 app.controller('Tweets', function($scope, $http, $timeout, Twitter) {
 
     $scope.tweets = [];
+    $scope.markers = [];
 
     $scope.$watch(
         function() {
@@ -33,6 +39,16 @@ app.controller('Tweets', function($scope, $http, $timeout, Twitter) {
         },
         function(tweets) {
             $scope.tweets = tweets;
+
+            $scope.markers = tweets.map(function(tweet) {
+                return {
+                    lng: tweet.coordinates.coordinates[0],
+                    lat: tweet.coordinates.coordinates[1],
+                    message: tweet.text,
+                    focus: true
+                }
+            });
+
         }
     );
 
